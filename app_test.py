@@ -10,10 +10,6 @@ pass_2 = st.text_input('password')
 if user == username:
   if pass_2 == password:
     st.markdown('welcome')
-    
-    path = st.text_input('path')
-    df = pd.read_csv(path)
-    st.dataframe(df)
 
   else:
     st.markdown('password is wrong')
