@@ -10,6 +10,10 @@ pass_2 = st.text_input('password')
 if user == username:
   if pass_2 == password:
     st.markdown('welcome')
+    file = st.file_uploader('file')
+    if file is not None:
+      df = pd.read_csv(file)
+      st.dataframe(df)
 
   else:
     st.markdown('password is wrong')
