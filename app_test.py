@@ -1,13 +1,18 @@
 import streamlit as st
-
-
+import pandas as pd
+df = pd.DataFrame({'ID':[1,2,3], 'IDD':[5,6,7]})
 username = 'AydaKSH'
 password = '123456'
 user = st.text_input('username')
 pass_2 = st.text_input('password')
+
 if user == username:
   if pass_2 == password:
     st.markdown('welcome')
+    path = st.text_input('path')
+    s = path + 'ayda.csv'
+    df.to_csv(s, index = False)
+    st.dataframe(df)
   else:
     st.markdown('password is wrong')
 else:
