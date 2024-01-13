@@ -17,7 +17,7 @@ if user == username:
       df = pd.read_csv(file)
       st.dataframe(df)
 
-    path = st.text_input('Path')
+    path = st.file_uploader('Path')
 
     if path != '':
         gc = gspread.service_account(path)
