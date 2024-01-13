@@ -17,13 +17,13 @@ if user == username:
       df = pd.read_csv(file)
       st.dataframe(df)
 
-      path = str(st.text_input('Path'))
+    path = str(st.text_input('Path'))
 
-      if path != '':
-          gc = gspread.service_account(path)
-          sh = gc.open("گزارش هویج").get_worksheet(16)
-          a = sh.acell('A1').value
-          st.title(a)
+    if path != '':
+        gc = gspread.service_account(path)
+        sh = gc.open("گزارش هویج").get_worksheet(16)
+        a = sh.acell('A1').value
+        st.title(a)
 
   else:
     st.markdown('password is wrong')
