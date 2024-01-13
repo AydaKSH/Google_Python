@@ -5,5 +5,4 @@ b = st.number_input('int2')
 
 c = a + b
 st.write('sum is', c)
-
-print(c)
+st.markdown('this app is private')
