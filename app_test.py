@@ -15,8 +15,7 @@ if user == username:
     st.markdown('welcome')
     cred_file = st.file_uploader('Upload Credentials.json File')
     if cred_file is not None:
-      content = cred_file.read()
-      cred_dict = json.load(content)
+      cred_dict = json.load(cred_file)
       gc = gspread.service_account_from_dict(cred_dict)
       sh = gc.open("گزارش هویج").get_worksheet(16)
       d = sh.acell('A1').value
