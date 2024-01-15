@@ -228,7 +228,7 @@ def request_1(project, period_lst):
     SEO_df_filtered = date_project_filter(SEO_df, project, period_lst, cols_lst=['Person', 'Task', 'SubTask', 'Date', 'NewDuration'])
     SEO_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
         
-    st.dataframe(SEO_df_filtered)
+    st.dataframe(SEO_df_filtered, use_container_width=True)
 
 # ----------------------------- SEO Section
 
@@ -237,7 +237,7 @@ def request_1(project, period_lst):
     wordpress_df_filtered = date_project_filter(wordpress_df, project, period_lst, cols_lst=['Person', 'Task', 'Date', 'NewDuration', 'Info'])
     wordpress_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
         
-    st.dataframe(wordpress_df_filtered)
+    st.dataframe(wordpress_df_filtered, use_container_width=True)
 
     return
 #request_1('عطاحیدری', ['1402-10-03', '1402-10-05'])
