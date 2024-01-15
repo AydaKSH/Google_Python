@@ -42,7 +42,10 @@ def str_to_time(time_str):
            
     else:
         time_str = time_str.strip()
-        hour = int(time_str.split(sep = ':')[0])
+        try:
+            hour = int(time_str.split(sep = ':')[0])
+        except:
+            hour = 1
         try:
             minute = int(time_str.split(sep = ':')[1])
         except:
@@ -171,7 +174,7 @@ def get_data(sheet, col_lst, base_col):
 # ========================
 def SEO_data():
     
-    SEO_sheet = gc.open("گزارش هویج").get_worksheet(17)    
+    SEO_sheet = gc.open("گزارش هویج").get_worksheet(16)    
     cols_name = ['ID', 'Year', 'Month', 'Day', 'Person', 'Project', 'Task', 'SubTask',
              'Count', 'EstimateTime', 'StartTime', 'CompletionTime', 'Duration', 'Info']
 
@@ -202,6 +205,53 @@ def wordpress_data():
     wordpress_df_3 = persian_date(wordpress_df_2, 'Year', 'Month', 'Day')
     return wordpress_df_3
 
+def DOP_data():
+    
+    dop_sheet = gc.open("گزارش هویج").get_worksheet(18)  
+    cols_name = ['ID', 'Year', 'Month', 'Day', 'Person', 'Project', 'Task', 'count', 'rush',
+                 'StartTime', 'CompletionTime', 'Duration', 'Info']
+
+    dop_df = get_data(dop_sheet, cols_name, 'Person')
+    dop_df.replace('', '0', inplace = True)
+    
+    dop_df.dropna(axis = 0, subset = ['Person'], inplace = True)
+    dop_df.reset_index(drop = True, inplace = True)
+    dop_df_1 = fill_day(dop_df, 'Day')
+    dop_df_2 = time_cleaning(dop_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
+    dop_df_3 = persian_date(dop_df_2, 'Year', 'Month', 'Day')
+    return dop_df_3
+
+def instagram_data():
+    
+    instagram_sheet = gc.open("گزارش هویج").get_worksheet(19)  
+    cols_name = ['Year', 'Month', 'Day', 'Person', 'Project', 'Task', 'count',
+                 'StartTime', 'CompletionTime', 'Duration', 'Info']
+
+    instagram_df = get_data(instagram_sheet, cols_name, 'Person')
+    instagram_df.replace('', '0', inplace = True)
+    
+    instagram_df.dropna(axis = 0, subset = ['Person'], inplace = True)
+    instagram_df.reset_index(drop = True, inplace = True)
+    instagram_df_1 = fill_day(instagram_df, 'Day')
+    instagram_df.StartTime.replace('0', '9:00:00 AM')
+    instagram_df.CompletionTime.replace('0', '8:00:00 PM')
+    instagram_df_2 = time_cleaning(instagram_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
+    instagram_df_3 = persian_date(instagram_df_2, 'Year', 'Month', 'Day')
+    return instagram_df_3
+
+def shooting_data():
+    
+    shooting_sheet = gc.open("Havij Projects").get_worksheet(2)  
+    cols_name = ['Date', 'Project', 'Operation', 'StartTime', 'CompletionTime', 'Duration', 'Team',
+                 'Cameraman', 'Mobile', 'Camera', 'OSMO', 'Ronin', 'Light', 'OtherEquipment']
+
+    shooting_df = get_data(shooting_sheet, cols_name, 'Project')
+    shooting_df.replace('', '0', inplace = True)
+    
+    shooting_df.dropna(axis = 0, subset = ['Project'], inplace = True)
+    shooting_df.reset_index(drop = True, inplace = True)
+
+    return shooting_df
 
 # ======================================================
 #                   Phase 1 - Request 1
@@ -227,34 +277,71 @@ def request_1(project, period_lst):
     SEO_df = SEO_data()
     SEO_df_filtered = date_project_filter(SEO_df, project, period_lst, cols_lst=['Person', 'Task', 'SubTask', 'Date', 'NewDuration'])
     SEO_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
-        
-    st.dataframe(SEO_df_filtered, use_container_width=True)
-
-# ----------------------------- SEO Section
+    if SEO_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(SEO_df_filtered, hide_index = True, width = 700)
+# ----------------------------- WordPress Section
 
     st.header('WordPress')
     wordpress_df = wordpress_data()
     wordpress_df_filtered = date_project_filter(wordpress_df, project, period_lst, cols_lst=['Person', 'Task', 'Date', 'NewDuration', 'Info'])
-    wordpress_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
+    wordpress_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)   
+    if wordpress_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(wordpress_df_filtered, hide_index = True, width = 700)
+# ----------------------------- DOP Section
+
+    st.header('DOP')
+    dop_df = DOP_data()
+    dop_df_filtered = date_project_filter(dop_df, project, period_lst, cols_lst=['Person', 'Task', 'Date', 'StartTime', 'CompletionTime', 'NewDuration', 'Info'])
+    dop_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
+    if dop_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(dop_df_filtered, hide_index = True, width = 700) 
+# ----------------------------- Instagram Section
+
+    st.header('Instagram')
+    instagram_df = instagram_data()
+    instagram_df_filtered = date_project_filter(instagram_df, project, period_lst, cols_lst=['Person', 'Task', 'Date', 'StartTime', 'CompletionTime', 'NewDuration', 'Info'])
+    instagram_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
+    if instagram_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(instagram_df_filtered, hide_index = True, width = 700)
+# ----------------------------- Shooting Section
+
+    st.header('Shooting')
+    shooting_df = shooting_data()
+    shooting_df_filtered = date_project_filter(shooting_df, project, period_lst, cols_lst=['Date', 'Project', 'StartTime', 'CompletionTime', 'Duration', 'Team', 'Mobile', 'Camera', 'OSMO', 'Ronin', 'Light'])
+    shooting_df_filtered.sort_values(by='Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True, key=None)
+    if shooting_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(shooting_df_filtered, hide_index = True, width = 700) 
         
-    st.dataframe(wordpress_df_filtered, use_container_width=True)
-
     return
-#request_1('عطاحیدری', ['1402-10-03', '1402-10-05'])
-
 
 
 # ======================================================
 #                    Streamlit
 # ======================================================
-projects_lst = ['هویج', 'عطاحیدری']
+projects_lst = ['چرمینه' ,'کلینیک ماه ملورین', 'کلینیک ماری', 'کلینیک رازی', 'کلینیک رادین', 'اسمارت کیدز', 'هویج' ,'وبجار' 
+               ,'اورنگ 🐥' ,'بونسای','شاه نهمت اللهی', 'عطاحیدری' ,'کلینیک آذین', 'کلینیک ارغوان', 'شایما' ,'دکتر مهرابی', 'کلینیک پریا'
+                 'ماهان اسپرسو','اوصیا','هنرمند','کلینیک اوتانا' , 'حس خوب زندگی', 'اعتمادبار' ,'دکوچی دیزاین', 'تابلوسازی' ,'کلینیک لادن', 'پرتوبازار', 'سیتی فون', 'مسافرت کجا'
+                , 'معلولان ذهنی', 'دکیمون' ,'نقره چی', 'قالی و قالیچه', 'حسابداری' ]
+
 user_dict = {'AydaKSH': '241178', 'SepehrT': 'Webjar123'}
 cols_1 = st.columns(2)
 username = cols_1[0].text_input('username')
 password = cols_1[1].text_input('password')
 
 if username in user_dict.keys():
+#if True:
     if user_dict[username] == password:
+    #if True:
         st.markdown('welcome')
         cred_file = st.file_uploader('Upload Credentials.json File')
         if cred_file is not None:
@@ -263,8 +350,9 @@ if username in user_dict.keys():
             gc = gspread.service_account_from_dict(cred_dict)
             date_option = st.radio(label = 'please select one option', options = ['Period', 'Just 1 Day'])
             if date_option == 'Period':
-                start_date = st.text_input('Please Enter the Start Date, format yyyy-mm-dd')
-                end_date = st.text_input('Please Enter the End Date, format yyyy-mm-dd')
+                cols_2 = st.columns(2)
+                start_date = cols_2[0].text_input('Please Enter the Start Date, format yyyy-mm-dd')
+                end_date = cols_2[1].text_input('Please Enter the End Date, format yyyy-mm-dd')
                 period_lst = [start_date, end_date]
             else:
                 single_date = st.text_input('Please Enter the Date, format yyyy-mm-dd')
