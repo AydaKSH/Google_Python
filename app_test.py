@@ -230,7 +230,7 @@ def get_data(sheet, col_lst, base_col):
     return df
 
 #connect to the service account
-gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
+#gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
 
 # ========================
 #         DataFrames
