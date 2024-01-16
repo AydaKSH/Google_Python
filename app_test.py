@@ -181,10 +181,14 @@ def time_cleaning(df, sort_col, time_col_lst):
 # ========================
 #       Fill Day
 # ========================
-def fill_day(df, day_col):
+def fill_day(df, day_col, month_col, year_col):
     for i in range(df.shape[0]):
         if df[day_col][i] == '0':
             df[day_col][i] = df[day_col][i-1]
+        if df[month_col][i] == '0':
+            df[month_col][i] = df[month_col][i-1]
+        if df[year_col][i] == '0':
+            df[year_col][i] = df[year_col][i-1]
     return df
 
 # ========================
@@ -254,7 +258,7 @@ def SEO_data():
     
     SEO_df.dropna(axis = 0, subset = ['Person'], inplace = True)
     SEO_df.reset_index(drop = True, inplace = True)
-    SEO_df_1 = fill_day(SEO_df, 'Day')
+    SEO_df_1 = fill_day(SEO_df, 'Day', 'Month', 'Year')
     SEO_df_2 = time_cleaning(SEO_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
     SEO_df_3 = persian_date(SEO_df_2, 'Year', 'Month', 'Day')
     return SEO_df_3
@@ -271,7 +275,7 @@ def wordpress_data():
     
     wordpress_df.dropna(axis = 0, subset = ['Person'], inplace = True)
     wordpress_df.reset_index(drop = True, inplace = True)
-    wordpress_df_1 = fill_day(wordpress_df, 'Day')
+    wordpress_df_1 = fill_day(wordpress_df, 'Day', 'Month', 'Year')
     wordpress_df_2 = time_cleaning(wordpress_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
     wordpress_df_3 = persian_date(wordpress_df_2, 'Year', 'Month', 'Day')
     return wordpress_df_3
@@ -287,7 +291,7 @@ def DOP_data():
     
     dop_df.dropna(axis = 0, subset = ['Person'], inplace = True)
     dop_df.reset_index(drop = True, inplace = True)
-    dop_df_1 = fill_day(dop_df, 'Day')
+    dop_df_1 = fill_day(dop_df, 'Day', 'Month', 'Year')
     dop_df_2 = time_cleaning(dop_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
     dop_df_3 = persian_date(dop_df_2, 'Year', 'Month', 'Day')
     return dop_df_3
@@ -303,7 +307,7 @@ def instagram_data():
     
     instagram_df.dropna(axis = 0, subset = ['Person'], inplace = True)
     instagram_df.reset_index(drop = True, inplace = True)
-    instagram_df_1 = fill_day(instagram_df, 'Day')
+    instagram_df_1 = fill_day(instagram_df, 'Day', 'Month', 'Year')
     instagram_df.StartTime.replace('0', '9:00:00 AM')
     instagram_df.CompletionTime.replace('0', '8:00:00 PM')
     instagram_df_2 = time_cleaning(instagram_df_1, ["Person", 'Day'], ['StartTime', 'CompletionTime', 'Duration'])
