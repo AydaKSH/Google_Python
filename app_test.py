@@ -443,7 +443,7 @@ def request_2(project):
         st.write('Contract Duration: ', str(projects_df_filtered.InstagramPeriod[0]) + ' Month')
         st.write('Plan: ', projects_df_filtered.Plan[0])
 
-    full_data_option = st.radio(label = 'Wanna See Full Information?', options = ['Yes', 'No'])
+    full_data_option = st.radio(label = 'Wanna See Full Information?', options = ['No', 'Yes'])
     if full_data_option == 'Yes':
         st.markdown('Contract Data:')
         st.dataframe(projects_df_filtered, hide_index = True, width = 700) 
