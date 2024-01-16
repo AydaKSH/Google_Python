@@ -12,8 +12,14 @@ import plotly.figure_factory as ff
 # ======================================================
 #                    Visualization
 # ======================================================
-def bullet_chart(df, project):
-    default_project_period = 30 
+def bullet_chart(df, project_df, project):
+    idxx = list(project_df[project_df.Project == project].index)[0]
+    try:
+        duration = int(project_df.InstagramPeriod[idxx]) 
+    except:
+        duration = 1
+    
+    default_project_period = 30 * duration
     
     today = date.today()
     
@@ -25,21 +31,24 @@ def bullet_chart(df, project):
     first_date = jdatetime.date(year_0, month_0, day_0).togregorian()
     
     diff_day = int((today - first_date).days)
+
     if diff_day > default_project_period:
         st.write(diff_day, 'days have passed since the start of the project')
         st.markdown('You Have Passed The Deadline! But If You Want to Recaculate Please Enter a New Period')
-        project_period = st.number_input('Please Enter The New Period', min_value=1)
+        project_period = st.number_input('Please Enter The New Period', min_value=30)
         ratio = diff_day / project_period
+        
     else:
         ratio = diff_day / default_project_period
+
     
-    total_posts = int(df.TotalPosts[idx]) + int(df.RemainingPosts[idx])
+    total_posts = (int(df.TotalPosts[idx]) + int(df.RemainingPosts[idx])) * duration
     expected_posts = int(ratio * total_posts)
                          
-    total_stories = int(df.Stories[idx]) + int(df.RemainingStories[idx]) 
+    total_stories = (int(df.Stories[idx]) + int(df.RemainingStories[idx])) * duration 
     expected_stories = int(ratio * total_stories) 
     
-    total_activity = float(df.ActivityTime[idx]) + float(df.RemainingActivityTime[idx])             
+    total_activity = (float(df.ActivityTime[idx]) + float(df.RemainingActivityTime[idx])) * duration            
     expected_activity = round(ratio * total_activity, 2)
     
     post_range_lst = [expected_posts * 0.8, expected_posts * 1.2, total_posts]
@@ -64,12 +73,11 @@ def bullet_chart(df, project):
         data, titles='label', markers='point',
         measures='performance', ranges='range', orientation='h',
     )
-
-    st.plotly_chart(fig, use_container_width=True)
+    if ratio <= 1:
+        st.plotly_chart(fig, use_container_width=True)
                           
     return
-    
-    
+     
 # ======================================================
 #                    Functions
 # ======================================================
@@ -327,8 +335,21 @@ def projects_detail_data():
     projects_detail_df.replace('', '-', inplace = True)
     
     return projects_detail_df
+
+def projects_data():
+    projects_sheet = gc.open('Havij Projects').get_worksheet(0)
+    cols_name = ['Project', 'Owner', 'PhoneNumber', 'ContractDate', 'Plan', 'InstagramPageID',
+                 'Admin', 'InstagramPeriod', 'InstagramCost', 'SeoPeriod', 'SeoMonthlyCost',
+                 'SeoTotalCost', 'SeoWords', 'TotalCost', 'Details']
+    projects_df = get_data(projects_sheet, cols_name, 'Project')
+    projects_df.drop(list(projects_df[projects_df['Project'] == 'فروشگاه ایرانیان'].index), axis = 0, inplace = True)
+    projects_df.reset_index(drop = True, inplace = True)
+    projects_df.drop('Details', axis = 1, inplace = True)
+    for i in range(projects_df.shape[0]):
+        projects_df.ContractDate[i] = '1402' + '-' + projects_df.ContractDate[i].replace('/', '-')
     
-    
+    return projects_df
+        
 # ======================================================
 #                   Phase 1 - Request 1
 # ======================================================
@@ -408,10 +429,27 @@ def request_2(project):
     
     projects_detail_df = projects_detail_data()
     projects_detail_df_filtered = projects_detail_df[projects_detail_df.Project == project]
-    if projects_detail_df_filtered.empty:
-        st.markdown('There is no information to show!')
-    else:
+    projects_detail_df_filtered.reset_index(drop = True, inplace = True) 
+        
+    projects_df = projects_data()
+    projects_df_filtered = projects_df[projects_df.Project == project]
+    projects_df_filtered.reset_index(drop = True, inplace = True) 
+    
+    cols_3 = st.columns(2)
+    with cols_3[0]:
+        st.write('Contract Date: ', projects_df_filtered.ContractDate[0])
+        st.write('First Post Date: ', projects_detail_df_filtered.FirstPostDate[0])
+    with cols_3[1]:
+        st.write('Contract Duration: ', str(projects_df_filtered.InstagramPeriod[0]) + ' Month')
+        st.write('Plan: ', projects_df_filtered.Plan[0])
+
+    full_data_option = st.radio(label = 'Wanna See Full Information?', options = ['Yes', 'No'])
+    if full_data_option == 'Yes':
+        st.markdown('Contract Data:')
+        st.dataframe(projects_df_filtered, hide_index = True, width = 700) 
+        st.markdown('Project Status Data:')
         st.dataframe(projects_detail_df_filtered, hide_index = True, width = 700) 
+    
     return
     
 
@@ -455,11 +493,17 @@ if username in user_dict.keys():
             
             request_1(project = project_option, period_lst = period_lst)
             # ----------------------- Request 2
+            st.divider()
             st.title('ProjectsDetail')
-            project_option_2 = st.selectbox('Select The Project', projects_lst_2)
+            project_option_2 = st.selectbox('Please Select a Project', projects_lst_2)
             request_2(project_option_2)
+            
+            st.divider()
             projects_detail_df = projects_detail_data()
-            bullet_chart(projects_detail_df, project_option_2)
+            projects_df = projects_data()
+            bullet_chart(projects_detail_df, projects_df,project_option_2)
+            
+            
     else:
         st.markdown('password is wrong')
 else:
