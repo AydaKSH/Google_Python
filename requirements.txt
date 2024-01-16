@@ -1,5 +1,5 @@
 gspread
 datetime
 jdatetime
-plotly.figure_factory
-datetime.date
+plotly
+
