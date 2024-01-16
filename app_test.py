@@ -4,9 +4,72 @@ import gspread
 import json
 from datetime import datetime
 import jdatetime
+from datetime import date
+import plotly.figure_factory as ff
 #from datetime import timedelta
 #from datetime import time
 
+# ======================================================
+#                    Visualization
+# ======================================================
+def bullet_chart(df, project):
+    default_project_period = 30 
+    
+    today = date.today()
+    
+    idx = list(df[df.Project == project].index)[0]
+    first_post_date = df.FirstPostDate[idx]
+    year_0 = int(first_post_date.split(sep = '-')[0])
+    month_0 = int(first_post_date.split(sep = '-')[1])
+    day_0 = int(first_post_date.split(sep = '-')[2])
+    first_date = jdatetime.date(year_0, month_0, day_0).togregorian()
+    
+    diff_day = int((today - first_date).days)
+    if diff_day > default_project_period:
+        st.write(diff_day, 'days have passed since the start of the project')
+        st.markdown('You Have Passed The Deadline! But If You Want to Recaculate Please Enter a New Period')
+        project_period = st.number_input('Please Enter The New Period', min_value=1)
+        ratio = diff_day / project_period
+    else:
+        ratio = diff_day / default_project_period
+    
+    total_posts = int(df.TotalPosts[idx]) + int(df.RemainingPosts[idx])
+    expected_posts = int(ratio * total_posts)
+                         
+    total_stories = int(df.Stories[idx]) + int(df.RemainingStories[idx]) 
+    expected_stories = int(ratio * total_stories) 
+    
+    total_activity = float(df.ActivityTime[idx]) + float(df.RemainingActivityTime[idx])             
+    expected_activity = round(ratio * total_activity, 2)
+    
+    post_range_lst = [expected_posts * 0.8, expected_posts * 1.2, total_posts]
+    story_range_lst = [expected_stories * 0.8, 1.2 * expected_stories, total_stories]
+    activity_range_lst = [expected_activity * 0.8, expected_activity * 1.2, total_activity]
+    
+    post_point = [expected_posts]
+    story_point = [expected_stories]
+    activity_point = [expected_activity]
+    
+    post_performance = [0, int(df.TotalPosts[idx])]
+    story_performance = [0, int(df.Stories[idx]) ]
+    activivty_performance = [0, float(df.ActivityTime[idx])]
+    
+    data = (
+        {"label": "Post", "range": post_range_lst, "performance": post_performance, "point": post_point},
+        {"label": "Story", "range": story_range_lst, "performance": story_performance, "point": story_point},
+        {"label": "ActivityTime", "range": activity_range_lst, "performance": activivty_performance, "point": activity_point}
+        )
+    
+    fig = ff.create_bullet(
+        data, titles='label', markers='point',
+        measures='performance', ranges='range', orientation='h',
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+                          
+    return
+    
+    
 # ======================================================
 #                    Functions
 # ======================================================
@@ -67,7 +130,7 @@ def time_cleaning(df, sort_col, time_col_lst):
     StartTime = time_col_lst[0]
     CompletionTime = time_col_lst[1]
     
-    Duration = time_col_lst[2]
+    #Duration = time_col_lst[2]
 
     duration_lst = list()
     duration_int_lst = list()
@@ -167,7 +230,7 @@ def get_data(sheet, col_lst, base_col):
     return df
 
 #connect to the service account
-#gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
+gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
 
 # ========================
 #         DataFrames
@@ -253,6 +316,19 @@ def shooting_data():
 
     return shooting_df
 
+def projects_detail_data():
+    projects_detail_sheet = gc.open('Havij Projects').get_worksheet(1)
+    cols_name = ['Project', 'Plan', 'FirstPostDate', 'Reels', 'OtherPosts', 'TotalPosts', 'RemainingPosts', 
+                 'Stories', 'RemainingStories', 'ActivityTime', 'RemainingActivityTime', 'CameramanTime',
+                 'AdminTime', 'TotalShooting', 'Covers', 'Highlights', 'RemainingHighlights']
+    projects_detail_df = get_data(projects_detail_sheet, cols_name, 'Project')
+    for i in range(projects_detail_df.shape[0]):
+        projects_detail_df.FirstPostDate[i] = projects_detail_df.FirstPostDate[i].replace('/', '-')
+    projects_detail_df.replace('', '-', inplace = True)
+    
+    return projects_detail_df
+    
+    
 # ======================================================
 #                   Phase 1 - Request 1
 # ======================================================
@@ -324,14 +400,32 @@ def request_1(project, period_lst):
         
     return
 
+# ======================================================
+#                   Phase 1 - Request 2
+# ======================================================
+
+def request_2(project):
+    
+    projects_detail_df = projects_detail_data()
+    projects_detail_df_filtered = projects_detail_df[projects_detail_df.Project == project]
+    if projects_detail_df_filtered.empty:
+        st.markdown('There is no information to show!')
+    else:
+        st.dataframe(projects_detail_df_filtered, hide_index = True, width = 700) 
+    return
+    
 
 # ======================================================
 #                    Streamlit
 # ======================================================
 projects_lst = ['چرمینه' ,'کلینیک ماه ملورین', 'کلینیک ماری', 'کلینیک رازی', 'کلینیک رادین', 'اسمارت کیدز', 'هویج' ,'وبجار' 
                ,'اورنگ 🐥' ,'بونسای','شاه نهمت اللهی', 'عطاحیدری' ,'کلینیک آذین', 'کلینیک ارغوان', 'شایما' ,'دکتر مهرابی', 'کلینیک پریا'
-                 'ماهان اسپرسو','اوصیا','هنرمند','کلینیک اوتانا' , 'حس خوب زندگی', 'اعتمادبار' ,'دکوچی دیزاین', 'تابلوسازی' ,'کلینیک لادن', 'پرتوبازار', 'سیتی فون', 'مسافرت کجا'
+                , 'ماهان اسپرسو','اوصیا','هنرمند','کلینیک اوتانا' , 'حس خوب زندگی', 'اعتمادبار' ,'دکوچی دیزاین', 'تابلوسازی' ,'کلینیک لادن', 'پرتوبازار', 'سیتی فون', 'مسافرت کجا'
                 , 'معلولان ذهنی', 'دکیمون' ,'نقره چی', 'قالی و قالیچه', 'حسابداری' ]
+projects_lst_2 = ['چرمینه' ,'کلینیک ماه ملورین', 'کلینیک ماری', 'کلینیک رازی', 'کلینیک رادین', 'اسمارت کیدز', 'هویج' ,'وبجار' 
+               ,'اورنگ 🐥' ,'بونسای','شاه نهمت اللهی', 'عطاحیدری' ,'کلینیک آذین', 'کلینیک ارغوان', 'شایما' ,'دکتر مهرابی', 'کلینیک پریا'
+                , 'ماهان اسپرسو','کلینیک اوتانا' , 'حس خوب زندگی']
+
 
 user_dict = {'AydaKSH': '241178', 'SepehrT': 'Webjar123'}
 cols_1 = st.columns(2)
@@ -360,8 +454,15 @@ if username in user_dict.keys():
             project_option = st.selectbox('Select Your Desired Project', projects_lst)
             
             request_1(project = project_option, period_lst = period_lst)
+            # ----------------------- Request 2
+            st.title('ProjectsDetail')
+            project_option_2 = st.selectbox('Select The Project', projects_lst_2)
+            request_2(project_option_2)
+            projects_detail_df = projects_detail_data()
+            bullet_chart(projects_detail_df, project_option_2)
     else:
         st.markdown('password is wrong')
 else:
-  st.markdown('you are not allowed')
+    st.markdown('you are not allowed')
+
 
