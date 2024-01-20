@@ -77,7 +77,19 @@ def bullet_chart(df, project_df, project):
         st.plotly_chart(fig, use_container_width=True)
                           
     return
-     
+# ---------------------------------------------
+
+def instagram_line_chart(df, metric):
+    df_new = df[['Date', metric]]
+    for i in range(df_new.shape[0]):
+        if df_new[metric][i] == '':
+            df_new[metric][i] = 0
+        else:
+            df_new[metric][i] = int(df_new[metric][i])
+            
+    st.line_chart(df_new, x = 'Date', y = metric, use_container_width=True, color='#cc0000')
+    
+    return
 # ======================================================
 #                    Functions
 # ======================================================
@@ -241,8 +253,34 @@ def get_data(sheet, col_lst, base_col):
     df.reset_index(drop = True, inplace = True)    
     return df
 
+# ========================
+#      Get Page Data
+# ========================
+
+def get_page_data(sheet, col_lst, base_col):
+    records_lst = sheet.get_all_values()
+    df = pd.DataFrame(records_lst, columns = col_lst)
+    df.drop([0], axis = 0, inplace = True)
+    df = df[df[base_col] != '']
+    df.reset_index(drop = True, inplace = True) 
+    idx = list(df[df.Subject == 'موضوع'].index)[0]
+    idx_lst = list(range(0, idx+1))
+    df.drop(idx_lst, axis = 0, inplace = True)
+    df.reset_index(drop = True, inplace = True)  
+    df.drop(['Date2', 'u', 'v', 'w', 'x'], axis = 1, inplace = True)
+    persiandate_lst = list()
+    for i in range(df.shape[0]):
+        year = int(df.Date[i].split(sep = '/')[0])
+        month = int(df.Date[i].split(sep = '/')[1])
+        day = int(df.Date[i].split(sep = '/')[2])
+        p_date = jdatetime.date(year, month, day)
+        df.Date[i] = str(p_date)
+        persiandate_lst.append(p_date)
+    df['PersianDate'] = persiandate_lst
+    return df
+
 #connect to the service account
-#gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
+gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
 
 # ========================
 #         DataFrames
@@ -353,7 +391,25 @@ def projects_data():
         projects_df.ContractDate[i] = '1402' + '-' + projects_df.ContractDate[i].replace('/', '-')
     
     return projects_df
-        
+
+def instagram_page_data(page):  
+    
+    page_index_dict = {'بونسای': 8, 'کلینیک رازی': 9, 'کلینیک ماری': 10, 'کلینیک رادین': 11, 'اورنگ 🐥': 12,
+                       'کلینیک ماه ملورین': 13, 'چرمینه': 14, 'ارغوان کاشت': 15, 'ارغوان پوست': 16,
+                       'کلینیک ارغوان': 17, 'کلینیک اوتانا': 18, 'کلینیک پریا': 19, 'اسمارت کیدز': 20,
+                       'عطاحیدری': 21, 'شاه نهمت اللهی': 22, 'کلینیک آذین': 23, 'دکتر مهرابی': 24}
+    
+    idx = page_index_dict[page]
+    page_sheet = gc.open('دیتای پیج پروژه های هویج').get_worksheet(idx)
+    cols_name = ['Subject', 'Date2', 'Date', 'Advertisement', 'Goal', 'ContentType', 'Col', 'Impression',
+                 'View', 'Like', 'Comment', 'Share', 'Save', 'Total', 'ClickOnLink', 'Activity', 'Story',
+                 'Dashboard', 'Follower', 'Info', 'u', 'v', 'w', 'x']
+    page_df = get_page_data(page_sheet, cols_name, 'Date')
+    page_df.sort_values('Date', axis=0, ascending=True, inplace=True, kind='quicksort', na_position='last', ignore_index=True)
+
+    return page_df
+
+  
 # ======================================================
 #                   Phase 1 - Request 1
 # ======================================================
@@ -456,6 +512,18 @@ def request_2(project):
     
     return
     
+# ======================================================
+#                   Phase 1 - Request 3
+# ======================================================
+def request_3(project_option):
+    
+    df = instagram_page_data(project_option)
+    
+    metric_lst = ['Impression', 'View', 'Like', 'Comment', 'Share', 'Save',
+                  'Total', 'Dashboard', 'Follower', 'Story', 'Activity']
+    metric = st.selectbox('Please Select a Metric', metric_lst)
+    instagram_line_chart(df, metric = metric)
+    return
 
 # ======================================================
 #                    Streamlit
@@ -468,22 +536,25 @@ projects_lst_2 = ['چرمینه' ,'کلینیک ماه ملورین', 'کلین�
                ,'اورنگ 🐥' ,'بونسای','شاه نهمت اللهی', 'عطاحیدری' ,'کلینیک آذین', 'کلینیک ارغوان', 'شایما' ,'دکتر مهرابی', 'کلینیک پریا'
                 , 'ماهان اسپرسو','کلینیک اوتانا' , 'حس خوب زندگی']
 
+projects_lst_3 = projects_lst_2.copy()
+projects_lst_3.append('ارغوان کاشت')
+projects_lst_3.append('ارغوان پوست')
 
 user_dict = {'AydaKSH': '241178', 'SepehrT': 'Webjar123'}
 cols_1 = st.columns(2)
 username = cols_1[0].text_input('username')
 password = cols_1[1].text_input('password')
 
-if username in user_dict.keys():
-#if True:
-    if user_dict[username] == password:
-    #if True:
+#if username in user_dict.keys():
+if True:
+    #if user_dict[username] == password:
+    if True:
         st.markdown('welcome')
-        cred_file = st.file_uploader('Upload Credentials.json File')
-        if cred_file is not None:
-        #if True:
-            cred_dict = json.load(cred_file)
-            gc = gspread.service_account_from_dict(cred_dict)
+        #cred_file = st.file_uploader('Upload Credentials.json File')
+        #if cred_file is not None:
+        if True:
+            #cred_dict = json.load(cred_file)
+            #gc = gspread.service_account_from_dict(cred_dict)
             date_option = st.radio(label = 'please select one option', options = ['Period', 'Just 1 Day'])
             if date_option == 'Period':
                 cols_2 = st.columns(2)
@@ -495,22 +566,23 @@ if username in user_dict.keys():
                 period_lst = [single_date]
             project_option = st.selectbox('Select Your Desired Project', projects_lst)
             
-            request_1(project = project_option, period_lst = period_lst)
+            #request_1(project = project_option, period_lst = period_lst)
             # ----------------------- Request 2
             st.divider()
             st.title('ProjectsDetail')
             project_option_2 = st.selectbox('Please Select a Project', projects_lst_2)
-            request_2(project_option_2)
+            #request_2(project_option_2)
+            
+            #st.divider()
+            #projects_detail_df = projects_detail_data()
+            #projects_df = projects_data()
+            #bullet_chart(projects_detail_df, projects_df,project_option_2)
             
             st.divider()
-            projects_detail_df = projects_detail_data()
-            projects_df = projects_data()
-            bullet_chart(projects_detail_df, projects_df,project_option_2)
-            
+            project_option = st.selectbox('Please Choose a Project', projects_lst_3)
+            request_3(project_option)
             
     else:
         st.markdown('password is wrong')
 else:
     st.markdown('you are not allowed')
-
-
