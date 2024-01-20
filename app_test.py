@@ -280,7 +280,7 @@ def get_page_data(sheet, col_lst, base_col):
     return df
 
 #connect to the service account
-gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
+#gc = gspread.service_account(filename="C:/Users/ASUS/Desktop/WebjarCodes/GoogleSheetsPython/credentials.json")
 
 # ========================
 #         DataFrames
@@ -545,16 +545,16 @@ cols_1 = st.columns(2)
 username = cols_1[0].text_input('username')
 password = cols_1[1].text_input('password')
 
-#if username in user_dict.keys():
-if True:
-    #if user_dict[username] == password:
-    if True:
+if username in user_dict.keys():
+#if True:
+    if user_dict[username] == password:
+    #if True:
         st.markdown('welcome')
-        #cred_file = st.file_uploader('Upload Credentials.json File')
-        #if cred_file is not None:
-        if True:
-            #cred_dict = json.load(cred_file)
-            #gc = gspread.service_account_from_dict(cred_dict)
+        cred_file = st.file_uploader('Upload Credentials.json File')
+        if cred_file is not None:
+        #if True:
+            cred_dict = json.load(cred_file)
+            gc = gspread.service_account_from_dict(cred_dict)
             date_option = st.radio(label = 'please select one option', options = ['Period', 'Just 1 Day'])
             if date_option == 'Period':
                 cols_2 = st.columns(2)
@@ -566,17 +566,17 @@ if True:
                 period_lst = [single_date]
             project_option = st.selectbox('Select Your Desired Project', projects_lst)
             
-            #request_1(project = project_option, period_lst = period_lst)
+            request_1(project = project_option, period_lst = period_lst)
             # ----------------------- Request 2
             st.divider()
             st.title('ProjectsDetail')
             project_option_2 = st.selectbox('Please Select a Project', projects_lst_2)
-            #request_2(project_option_2)
+            request_2(project_option_2)
             
-            #st.divider()
-            #projects_detail_df = projects_detail_data()
-            #projects_df = projects_data()
-            #bullet_chart(projects_detail_df, projects_df,project_option_2)
+            st.divider()
+            projects_detail_df = projects_detail_data()
+            projects_df = projects_data()
+            bullet_chart(projects_detail_df, projects_df,project_option_2)
             
             st.divider()
             project_option = st.selectbox('Please Choose a Project', projects_lst_3)
